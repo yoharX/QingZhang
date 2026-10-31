@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { Icon, type IconName } from './Icon';
 import { Logo, Wordmark } from './Logo';
+import { Avatar } from './Avatar';
 
 const NAV: { to: string; label: string; icon: IconName }[] = [
   { to: '/', label: '主页', icon: 'home' },
@@ -10,14 +11,6 @@ const NAV: { to: string; label: string; icon: IconName }[] = [
   { to: '/insights', label: 'AI 分析', icon: 'sparkle' },
   { to: '/me', label: '我的', icon: 'user' },
 ];
-
-function initials(name: string): string {
-  const n = name.trim();
-  if (!n) return 'U';
-  // 中文取最后一个字，英文取首字母
-  if (/[\u4e00-\u9fa5]/.test(n)) return n.slice(-2);
-  return n.slice(0, 2).toUpperCase();
-}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, openComposer } = useApp();
@@ -54,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="sidebar-foot">
           <button className="user-pill" onClick={() => navigate('/me')}>
-            <div className="avatar">{initials(user?.name ?? '')}</div>
+            <Avatar name={user?.name ?? ''} avatar={user?.avatar} size={32} />
             <div style={{ minWidth: 0 }}>
               <div className="user-name">{user?.name ?? '未登录'}</div>
               <div className="user-mail">{user?.email ?? ''}</div>
@@ -69,8 +62,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Logo size={26} />
             <span style={{ fontWeight: 620, fontSize: 15 }}>轻帐</span>
           </div>
-          <button className="avatar" onClick={() => navigate('/me')} aria-label="我的">
-            {initials(user?.name ?? '')}
+          <button
+            className="avatar-btn"
+            onClick={() => navigate('/me')}
+            aria-label="我的"
+          >
+            <Avatar name={user?.name ?? ''} avatar={user?.avatar} size={30} />
           </button>
         </header>
 

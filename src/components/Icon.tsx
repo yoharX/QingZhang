@@ -29,7 +29,12 @@ type IconName =
   | 'refresh'
   | 'shield'
   | 'info'
-  | 'bolt';
+  | 'bolt'
+  | 'pin'
+  | 'grip'
+  | 'camera'
+  | 'chevronUp'
+  | 'spark';
 
 const PATHS: Record<IconName, JSX.Element> = {
   home: (
@@ -156,6 +161,30 @@ const PATHS: Record<IconName, JSX.Element> = {
     </>
   ),
   bolt: <path d="M13.4 3 5.6 13.4h5.2L10.6 21l7.8-10.4h-5.2z" />,
+  pin: (
+    <>
+      <path d="M12 21s7-5.6 7-11.2A7 7 0 1 0 5 9.8C5 15.4 12 21 12 21z" />
+      <circle cx="12" cy="9.6" r="2.6" />
+    </>
+  ),
+  grip: (
+    <>
+      {[7, 12, 17].map((y) => (
+        <g key={y}>
+          <circle cx="9.2" cy={y} r="1.35" fill="currentColor" stroke="none" />
+          <circle cx="14.8" cy={y} r="1.35" fill="currentColor" stroke="none" />
+        </g>
+      ))}
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M3.4 8.8h3.2L8.3 6h7.4l1.7 2.8h3.2a1.6 1.6 0 0 1 1.6 1.6v8a1.6 1.6 0 0 1-1.6 1.6H3.4a1.6 1.6 0 0 1-1.6-1.6v-8a1.6 1.6 0 0 1 1.6-1.6z" />
+      <circle cx="12" cy="14.4" r="3.4" />
+    </>
+  ),
+  chevronUp: <path d="M5.5 15 12 8.5 18.5 15" />,
+  spark: <path d="M4 16.2 9.2 11l3.4 3.4L20 7.2M15.4 7.2H20v4.6" />,
 };
 
 export function Icon({

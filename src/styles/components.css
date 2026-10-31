@@ -637,6 +637,8 @@
 
 .bar-fill {
   width: 100%;
+  max-width: 44px;
+  margin: 0 auto;
   border-radius: 5px;
   background: rgba(14, 124, 102, 0.26);
   transition: height 600ms var(--ease), background var(--t-fast) var(--ease);
@@ -883,4 +885,554 @@
     width: 26px;
     color: var(--ink-3);
   }
+}
+
+/* ============================================================
+   天气卡
+   ============================================================ */
+.weather-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: linear-gradient(120deg, #ddf2fc 0%, #eef9fe 46%, var(--surface) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-icon-wrap {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.weather-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.weather-temp-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.weather-temp {
+  font-size: 34px;
+  font-weight: 640;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.weather-desc {
+  font-size: 14px;
+  font-weight: 540;
+  color: var(--ink-2);
+}
+
+.weather-city {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.weather-dot {
+  color: var(--ink-3);
+}
+
+.weather-side {
+  display: flex;
+  gap: 18px;
+  padding-left: 18px;
+  border-left: 1px solid var(--line);
+  flex: none;
+}
+
+.weather-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.wc-k {
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.wc-v {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.weather-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: none;
+}
+
+.weather-act {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.weather-act:hover:not(:disabled) {
+  background: rgba(0, 146, 199, 0.1);
+  color: var(--brand);
+}
+
+.weather-act:disabled {
+  opacity: 0.45;
+}
+
+.weather-skeleton-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--paper-2);
+  flex: none;
+  animation: shimmer 1.3s linear infinite;
+  background-image: linear-gradient(90deg, var(--paper-2) 0%, var(--surface-sunken) 40%, var(--paper-2) 80%);
+  background-size: 320px 100%;
+}
+
+.weather-error {
+  background: var(--surface);
+}
+
+.weather-error .weather-icon-wrap {
+  color: var(--ink-3);
+}
+
+.weather-retry {
+  flex: none;
+  border: 1px solid var(--line-strong);
+}
+
+/* ============================================================
+   首页板块排序面板
+   ============================================================ */
+.mod-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mod-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mod-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 0 12px 0 4px;
+  will-change: transform;
+  touch-action: pan-y;
+}
+
+.mod-row.is-dragging {
+  border-color: var(--brand);
+  box-shadow: var(--sh-2);
+  background: var(--surface);
+}
+
+.mod-row.is-off {
+  opacity: 0.52;
+}
+
+.mod-grip {
+  width: 30px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  cursor: grab;
+  /* 拖拽时不要触发页面滚动 */
+  touch-action: none;
+  border-radius: 8px;
+}
+
+.mod-grip:hover {
+  color: var(--ink-2);
+  background: var(--surface-sunken);
+}
+
+.mod-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mod-label {
+  font-size: 14px;
+  font-weight: 540;
+}
+
+.mod-desc {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mod-moves {
+  display: flex;
+  gap: 0;
+  flex: none;
+}
+
+.mod-arrow {
+  width: 26px;
+  height: 26px;
+  position: relative;
+}
+
+/* 手指友好：把可点区域撑到 40px，视觉尺寸不变 */
+.mod-arrow::after {
+  content: '';
+  position: absolute;
+  inset: -7px -4px;
+}
+
+.seg-mini .seg-item {
+  min-width: 54px;
+}
+
+.mod-hint {
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.7;
+}
+
+/* 开关 */
+.switch {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  border-radius: 99px;
+  background: var(--paper-2);
+  flex: none;
+  transition: background var(--t-base) var(--ease);
+}
+
+.switch.is-on {
+  background: var(--brand);
+}
+
+.switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 35, 43, 0.2);
+  transition: transform var(--t-base) var(--ease);
+}
+
+.switch.is-on .switch-knob {
+  transform: translateX(16px);
+}
+
+/* 把点击区域扩到 44px，手指好按 */
+.switch::after {
+  content: '';
+  position: absolute;
+  inset: -10px -6px;
+}
+
+/* ============================================================
+   页头小工具
+   ============================================================ */
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-icon-only {
+  gap: 6px;
+}
+
+.seg-mini {
+  width: auto;
+}
+
+.seg-mini .seg-item {
+  flex: none;
+  padding: 0 14px;
+  height: 32px;
+  font-size: 12.5px;
+}
+
+/* ============================================================
+   AI 配置与远程分析
+   ============================================================ */
+.ai-local-note {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  background: var(--brand-soft);
+  border-radius: var(--r-sm);
+  color: var(--brand-deep);
+}
+
+.ai-local-title {
+  font-size: 13.5px;
+  font-weight: 620;
+}
+
+.ai-local-body {
+  font-size: 12.5px;
+  line-height: 1.7;
+  margin-top: 3px;
+  opacity: 0.86;
+}
+
+.ai-test-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ai-test-msg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.ai-test-msg.is-ok {
+  color: var(--brand);
+}
+
+.ai-test-msg.is-bad {
+  color: var(--danger);
+}
+
+.ai-privacy {
+  display: flex;
+  gap: 6px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink-3);
+}
+
+.ai-wait {
+  font-size: 12.5px;
+  color: rgba(238, 247, 251, 0.55);
+  margin-top: 14px;
+}
+
+.btn-hero {
+  background: rgba(238, 247, 251, 0.16);
+  color: var(--ink-inverse);
+  border: 1px solid rgba(238, 247, 251, 0.24);
+  height: 38px;
+}
+
+.btn-hero:hover {
+  background: rgba(238, 247, 251, 0.26);
+}
+
+.btn-hero-ghost {
+  background: transparent;
+  color: rgba(238, 247, 251, 0.78);
+  border: 1px solid rgba(238, 247, 251, 0.2);
+  height: 38px;
+}
+
+.btn-hero-ghost:hover {
+  background: rgba(238, 247, 251, 0.1);
+}
+
+/* ============================================================
+   头像编辑
+   ============================================================ */
+.avatar-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar-editor-side {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-editor-label {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-bottom: 9px;
+  text-align: center;
+}
+
+.avatar-picks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.avatar-pick {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid transparent;
+  padding: 0;
+  transition: border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+
+.avatar-pick:hover {
+  transform: scale(1.06);
+}
+
+.avatar-pick.is-active {
+  border-color: var(--brand);
+}
+
+.avatar-upload {
+  margin-top: 10px;
+  height: 34px;
+  font-size: 12.5px;
+}
+
+/* 城市选择 */
+.weather-city-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--ink-2);
+  font-weight: 520;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: 6px;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.weather-city-btn:hover {
+  background: rgba(0, 146, 199, 0.1);
+  color: var(--brand);
+}
+
+.city-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.city-panel {
+  position: absolute;
+  top: calc(100% - 6px);
+  left: 14px;
+  width: 292px;
+  max-width: calc(100% - 24px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-3);
+  padding: 12px;
+  z-index: 31;
+  animation: fadeIn 160ms var(--ease);
+}
+
+.city-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-bottom: 9px;
+  padding-left: 2px;
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-height: 186px;
+  overflow-y: auto;
+}
+
+.city-chip {
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  transition: all var(--t-fast) var(--ease);
+}
+
+.city-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+  background: var(--surface-sunken);
+}
+
+.city-chip.is-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: 550;
+}
+
+.city-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  height: 34px;
+  justify-content: center;
+  margin-top: 9px;
+  border-radius: 8px;
+  border: 1px dashed var(--line-strong);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.city-auto:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+  background: var(--brand-soft);
 }

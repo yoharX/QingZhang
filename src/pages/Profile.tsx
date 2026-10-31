@@ -1,21 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { Icon } from '../components/Icon';
 import { Modal } from '../components/Modal';
+import { Avatar } from '../components/Avatar';
+import { ProfileEditor } from '../components/ProfileEditor';
+import { AiSettings } from '../components/AiSettings';
 import { AccountGlyph } from '../components/AccountGlyph';
 import { AccountEditor } from '../components/AccountEditor';
+import { HomeModuleSettings } from '../components/HomeModuleSettings';
 import { balancesOf, getAccountType, totalBalance } from '../lib/accounts';
-import { money, moneyRound } from '../lib/format';
+import { normalizeModules } from '../lib/homeModules';
+import { normalizeAi } from '../lib/ai';
+import { formatDateCN, money, moneyRound, toISODate } from '../lib/format';
 import type { Account } from '../lib/types';
-
-const VERSION = '0.1.0';
-
-function initials(name: string): string {
-  const n = name.trim();
-  if (!n) return 'U';
-  if (/[\u4e00-\u9fa5]/.test(n)) return n.slice(-2);
-  return n.slice(0, 2).toUpperCase();
-}
 
 export function ProfilePage() {
   const {
@@ -23,22 +21,36 @@ export function ProfilePage() {
     txns,
     accounts,
     setBudget,
+    updateProfile,
+    setHomeModules,
+    setAi,
     clearTxns,
     loadDemoData,
+    wipeAll,
     logout,
     exportBackup,
     exportCsv,
   } = useApp();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
   const [confirmClear, setConfirmClear] = useState(false);
+  const [confirmWipe, setConfirmWipe] = useState(false);
   const [toast, setToast] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [modulesOpen, setModulesOpen] = useState(false);
+  const aiCardRef = useRef<HTMLDivElement>(null);
 
   const balances = useMemo(() => balancesOf(accounts, txns), [accounts, txns]);
   const total = useMemo(() => totalBalance(accounts, balances), [accounts, balances]);
+  const modules = useMemo(() => normalizeModules(user?.homeModules), [user?.homeModules]);
+  const ai = useMemo(() => normalizeAi(user?.ai), [user?.ai]);
 
   const stats = useMemo(() => {
     const expense = txns.filter((t) => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
@@ -53,6 +65,23 @@ export function ProfilePage() {
     window.setTimeout(() => setToast(''), 1800);
   };
 
+  // 从 AI 分析页跳过来时，直接把设置弹窗打开
+  useEffect(() => {
+    const st = location.state as { focus?: string; mode?: 'local' | 'remote' } | null;
+    if (!st?.focus) return;
+    if (st.focus === 'ai') {
+      if (st.mode) setAi({ ...normalizeAi(user?.ai), mode: st.mode });
+      setAiOpen(true);
+      window.setTimeout(() => {
+        const el = aiCardRef.current;
+        if (el) window.scrollTo({ top: Math.max(0, el.offsetTop - 80), behavior: 'smooth' });
+      }, 120);
+    }
+    // 消费掉 state，刷新不会重复弹
+    navigate('/me', { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
+
   const openBudget = () => {
     setBudgetInput(user?.budget ? String(user.budget) : '');
     setBudgetOpen(true);
@@ -66,24 +95,37 @@ export function ProfilePage() {
     flash(n > 0 ? '预算已更新' : '已取消预算');
   };
 
+  const aiSummary =
+    ai.mode === 'local'
+      ? '本地规则引擎'
+      : ai.apiKey
+      ? ai.model
+      : '未配置密钥';
+
+  const visibleCount = modules.filter((m) => m.visible).length;
+
   return (
     <div className="page">
       <header className="page-head">
         <div>
           <h1 className="page-title">我的</h1>
-          <p className="page-sub">账号、预算与数据</p>
+          <p className="page-sub">资料、账户与数据</p>
         </div>
       </header>
 
       {/* 用户卡 */}
       <section className="card profile-card rise">
-        <div className="profile-identity">
-          <div className="avatar avatar-lg">{initials(user?.name ?? '')}</div>
-          <div style={{ minWidth: 0 }}>
+        <button className="profile-identity" onClick={() => setProfileOpen(true)}>
+          <Avatar name={user?.name ?? '你'} avatar={user?.avatar} size={56} />
+          <div style={{ minWidth: 0, textAlign: 'left' }}>
             <h2 className="profile-name">{user?.name ?? '未登录'}</h2>
             <p className="profile-mail">{user?.email}</p>
           </div>
-        </div>
+          <span className="profile-edit">
+            <Icon name="camera" size={14} />
+            编辑
+          </span>
+        </button>
 
         <div className="profile-stats">
           <div>
@@ -155,12 +197,27 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {/* 偏好 */}
-      <section className="card rise" style={{ animationDelay: '60ms' }}>
+      {/* 首页板块 */}
+      <section className="card rise" style={{ animationDelay: '80ms' }}>
         <div className="card-head">
-          <span className="card-title">偏好</span>
+          <span className="card-title">显示</span>
         </div>
         <ul className="setting-list">
+          <li>
+            <button className="setting-row" onClick={() => setModulesOpen(true)}>
+              <span className="setting-icon">
+                <Icon name="sliders" size={18} />
+              </span>
+              <span className="setting-main">
+                <span className="setting-title">首页板块</span>
+                <span className="setting-sub">调整顺序、隐藏不想看的</span>
+              </span>
+              <span className="setting-value">
+                {visibleCount}/{modules.length}
+              </span>
+              <Icon name="chevronRight" size={15} className="setting-chev" />
+            </button>
+          </li>
           <li>
             <button className="setting-row" onClick={openBudget}>
               <span className="setting-icon">
@@ -176,39 +233,65 @@ export function ProfilePage() {
               <Icon name="chevronRight" size={15} className="setting-chev" />
             </button>
           </li>
+        </ul>
+      </section>
+
+      {/* AI */}
+      <section className="card rise" style={{ animationDelay: '120ms' }} ref={aiCardRef}>
+        <div className="card-head">
+          <span className="card-title">AI 分析</span>
+        </div>
+        <ul className="setting-list">
           <li>
-            <div className="setting-row is-static">
+            <button className="setting-row" onClick={() => setAiOpen(true)}>
               <span className="setting-icon">
-                <Icon name="calendar" size={18} />
+                <Icon name="sparkle" size={18} />
               </span>
               <span className="setting-main">
-                <span className="setting-title">记账起始</span>
-                <span className="setting-sub">从第一次记录算起</span>
+                <span className="setting-title">分析方式</span>
+                <span className="setting-sub">
+                  {ai.mode === 'local' ? '全部在本机计算，不联网' : '调用你自己的模型接口'}
+                </span>
               </span>
-              <span className="setting-value num">{stats.span} 天</span>
-            </div>
+              <span className="setting-value">{aiSummary}</span>
+              <Icon name="chevronRight" size={15} className="setting-chev" />
+            </button>
           </li>
+        </ul>
+      </section>
+
+      {/* 数据 */}
+      <section className="card rise" style={{ animationDelay: '160ms' }}>
+        <div className="card-head">
+          <span className="card-title">数据</span>
+        </div>
+        <ul className="setting-list">
           <li>
             <div className="setting-row is-static">
               <span className="setting-icon">
                 <Icon name="shield" size={18} />
               </span>
               <span className="setting-main">
-                <span className="setting-title">数据存储</span>
+                <span className="setting-title">存储位置</span>
                 <span className="setting-sub">浏览器本地，不上传服务器</span>
               </span>
               <span className="tag tag-brand">本机</span>
             </div>
           </li>
-        </ul>
-      </section>
-
-      {/* 数据 */}
-      <section className="card rise" style={{ animationDelay: '110ms' }}>
-        <div className="card-head">
-          <span className="card-title">数据</span>
-        </div>
-        <ul className="setting-list">
+          <li>
+            <div className="setting-row is-static">
+              <span className="setting-icon">
+                <Icon name="calendar" size={18} />
+              </span>
+              <span className="setting-main">
+                <span className="setting-title">开始记录</span>
+                <span className="setting-sub">已用 {stats.span} 天</span>
+              </span>
+              <span className="setting-value num">
+                {formatDateCN(toISODate(new Date(user?.joinedAt ?? Date.now())))}
+              </span>
+            </div>
+          </li>
           <li>
             <button
               className="setting-row"
@@ -240,7 +323,7 @@ export function ProfilePage() {
               </span>
               <span className="setting-main">
                 <span className="setting-title">导出完整备份</span>
-                <span className="setting-sub">JSON 格式，含账号与全部流水</span>
+                <span className="setting-sub">JSON，含账号与全部流水</span>
               </span>
               <Icon name="chevronRight" size={15} className="setting-chev" />
             </button>
@@ -258,7 +341,7 @@ export function ProfilePage() {
               </span>
               <span className="setting-main">
                 <span className="setting-title">载入示例数据</span>
-                <span className="setting-sub">会重置账户与流水，用于演示</span>
+                <span className="setting-sub">会重置账户与流水</span>
               </span>
               <Icon name="chevronRight" size={15} className="setting-chev" />
             </button>
@@ -269,8 +352,8 @@ export function ProfilePage() {
                 <Icon name="trash" size={18} />
               </span>
               <span className="setting-main">
-                <span className="setting-title">清空所有记录</span>
-                <span className="setting-sub">不可恢复，建议先导出备份</span>
+                <span className="setting-title">清空所有流水</span>
+                <span className="setting-sub">保留账号与账户，不可恢复</span>
               </span>
               <Icon name="chevronRight" size={15} className="setting-chev" />
             </button>
@@ -278,29 +361,64 @@ export function ProfilePage() {
         </ul>
       </section>
 
-      {/* 关于 */}
-      <section className="card rise" style={{ animationDelay: '160ms' }}>
-        <div className="card-head">
-          <span className="card-title">关于</span>
+      {/* 删除本地数据 */}
+      <section className="card danger-card rise" style={{ animationDelay: '200ms' }}>
+        <div className="danger-head">
+          <Icon name="alert" size={16} />
+          <span>删除本机数据</span>
         </div>
-        <div className="about-block">
-          <div className="about-row">
-            <span className="dim">版本</span>
-            <span className="num">
-              {VERSION} · Demo
-            </span>
-          </div>
-          <p className="about-note">
-            轻帐第一版：只做记录、看账与解读三件事。当前为纯前端演示，账号、密码与流水均保存在此设备的浏览器中，换设备或清除站点数据会丢失。
-          </p>
+        <p className="danger-body">
+          昵称、头像、账户、流水、AI 密钥全部存在这台设备的浏览器里。删除后本地不留任何记录，也没有云端副本可以恢复。
+        </p>
+        <div className="danger-actions">
+          <button className="btn btn-danger" onClick={() => setConfirmWipe(true)}>
+            删除全部数据
+          </button>
+          <button className="btn btn-ghost" onClick={logout}>
+            <Icon name="logout" size={15} />
+            退出登录
+          </button>
         </div>
-        <button className="btn btn-ghost btn-block" style={{ marginTop: 16 }} onClick={logout}>
-          <Icon name="logout" size={16} />
-          退出登录
-        </button>
       </section>
 
-      {/* 预算弹窗 */}
+      {/* 弹窗们 */}
+      <ProfileEditor
+        open={profileOpen}
+        name={user?.name ?? ''}
+        avatar={user?.avatar ?? 'initial'}
+        onSave={(patch) => {
+          updateProfile(patch);
+          flash('资料已更新');
+        }}
+        onClose={() => setProfileOpen(false)}
+      />
+
+      <AiSettings
+        open={aiOpen}
+        config={ai}
+        onSave={(cfg) => {
+          setAi(cfg);
+          flash(cfg.mode === 'local' ? '已切到本地分析' : '已保存模型配置');
+        }}
+        onClose={() => setAiOpen(false)}
+      />
+
+      <HomeModuleSettings
+        open={modulesOpen}
+        modules={modules}
+        onChange={setHomeModules}
+        onClose={() => setModulesOpen(false)}
+      />
+
+      <AccountEditor
+        open={editorOpen}
+        account={editing}
+        onClose={() => {
+          setEditorOpen(false);
+          setEditing(null);
+        }}
+      />
+
       <Modal
         open={budgetOpen}
         onClose={() => setBudgetOpen(false)}
@@ -330,7 +448,6 @@ export function ProfilePage() {
               if (e.key === 'Enter') saveBudget();
             }}
             aria-label="月度预算金额"
-            autoFocus
           />
         </div>
         <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
@@ -338,12 +455,11 @@ export function ProfilePage() {
         </p>
       </Modal>
 
-      {/* 清空确认 */}
       <Modal
         open={confirmClear}
         onClose={() => setConfirmClear(false)}
-        title="清空所有记录？"
-        subtitle={`共 ${stats.count} 条流水将被删除`}
+        title="清空所有流水？"
+        subtitle={`共 ${stats.count} 条记录将被删除`}
         width={400}
         footer={
           <>
@@ -364,18 +480,37 @@ export function ProfilePage() {
         }
       >
         <p className="muted" style={{ fontSize: 14 }}>
-          删除后无法恢复，账号与预算设置会保留。
+          账号、头像与账户设置会保留，流水无法恢复。
         </p>
       </Modal>
 
-      <AccountEditor
-        open={editorOpen}
-        account={editing}
-        onClose={() => {
-          setEditorOpen(false);
-          setEditing(null);
-        }}
-      />
+      <Modal
+        open={confirmWipe}
+        onClose={() => setConfirmWipe(false)}
+        title="删除本机全部数据？"
+        subtitle="包括账号、头像、账户、流水与 AI 密钥"
+        width={420}
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => setConfirmWipe(false)}>
+              取消
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={() => {
+                setConfirmWipe(false);
+                wipeAll();
+              }}
+            >
+              确认删除
+            </button>
+          </>
+        }
+      >
+        <p className="muted" style={{ fontSize: 14, lineHeight: 1.8 }}>
+          删完会回到登录页，localStorage 里不会留下任何东西。想留个底的话，先导出一份备份。
+        </p>
+      </Modal>
 
       {toast && (
         <div className="toast" role="status">

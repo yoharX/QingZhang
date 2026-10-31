@@ -1,8 +1,10 @@
-import type { Account, PersistedState, Txn } from './types';
+import type { Account, PersistedState, Txn, User } from './types';
 import { buildSeedAccounts, buildSeedTransactions } from './seed';
+import { normalizeModules } from './homeModules';
+import { normalizeAi } from './ai';
 
 const KEY = 'qingzhang.v1';
-const VERSION = 2;
+const VERSION = 3;
 
 const EMPTY: PersistedState = { version: VERSION, user: null, accounts: [], txns: [] };
 
@@ -14,6 +16,20 @@ function inferAccountId(t: Partial<Txn>, accounts: Account[]): string {
   const alipay = accounts.find((a) => a.type === 'alipay');
   const wantBank = BANK_CATEGORIES.has(t.category ?? '');
   return (wantBank ? bank?.id : alipay?.id) ?? accounts[0]?.id ?? '';
+}
+
+/** 补齐后加的个性配置字段，保证老账号也能直接用 */
+function normalizeUser(u: Partial<User> | null | undefined): User | null {
+  if (!u || !u.email) return null;
+  return {
+    name: u.name || u.email.split('@')[0],
+    email: u.email,
+    budget: Number(u.budget) || 0,
+    joinedAt: u.joinedAt || Date.now(),
+    avatar: u.avatar || 'initial',
+    homeModules: normalizeModules(u.homeModules),
+    ai: normalizeAi(u.ai),
+  };
 }
 
 export function load(): PersistedState {
@@ -39,7 +55,8 @@ export function load(): PersistedState {
       }));
     }
 
-    return { version: VERSION, user: parsed.user ?? null, accounts, txns };
+    // v2 → v3：补齐头像、首页板块、AI 配置
+    return { version: VERSION, user: normalizeUser(parsed.user), accounts, txns };
   } catch {
     // 存储损坏时不让页面白屏，退化成空状态
     return { ...EMPTY };
@@ -56,12 +73,13 @@ export function save(state: PersistedState): void {
 
 export function clearAll(): void {
   localStorage.removeItem(KEY);
+  // 天气缓存也算个人数据，一并清掉
+  localStorage.removeItem('qingzhang.weather.v1');
 }
 
 /** 导出为 JSON 备份，前端直接下载 */
 export function exportJSON(state: PersistedState): void {
-  const blob = new Blob([JSON.stringify({ ...state, version: VERSION }, null, 2)], {
-    type: 'application/json;charset=utf-8',
+  const blob = new Blob([JSON.stringify({ ...state, version: VERSION }, null, 2)], {    type: 'application/json;charset=utf-8',
   });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

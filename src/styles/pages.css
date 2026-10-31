@@ -168,7 +168,9 @@
 }
 
 .account-card {
-  flex: 0 0 166px;
+  flex: 1 1 150px;
+  min-width: 132px;
+  max-width: 210px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -726,8 +728,8 @@
   grid-template-columns: 1fr 1fr;
   gap: 2px 12px;
   margin-top: 6px;
-  font-size: 10.5px;
-  color: rgba(238, 247, 251, 0.48);
+  font-size: 11px;
+  color: rgba(238, 247, 251, 0.58);
 }
 
 .ai-source {
@@ -1232,5 +1234,188 @@
 
   .txn-row {
     padding: 10px 2px;
+  }
+}
+
+/* ============================================================
+   我的：资料卡与危险区
+   ============================================================ */
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  text-align: left;
+  border-radius: var(--r-md);
+  padding: 4px 8px 4px 4px;
+  margin: -4px -8px -4px -4px;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.profile-identity:hover {
+  background: var(--surface-sunken);
+}
+
+.profile-edit {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 6px 11px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  flex: none;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.profile-identity:hover .profile-edit {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.danger-card {
+  border-color: #f0dcdc;
+  background: #fffafa;
+}
+
+.danger-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 620;
+  color: var(--danger);
+}
+
+.danger-body {
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--ink-2);
+  margin-top: 10px;
+  text-wrap: pretty;
+}
+
+.danger-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   移动端补充
+   ============================================================ */
+@media (max-width: 860px) {
+  /* iOS 上输入框小于 16px 会自动放大页面，这里统一放大 */
+  .input,
+  .search-input,
+  .amount-input,
+  .budget-input,
+  .acc-balance-field,
+  .ai-field {
+    font-size: 16px;
+  }
+
+  .amount-input {
+    font-size: 32px;
+  }
+
+  .page-head {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .head-actions {
+    /* 只有放不下时才换行，单个按钮不要独占一行 */
+    flex: 0 1 auto;
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .btn-icon-only .btn-label {
+    display: inline;
+  }
+
+  .weather-card {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .weather-icon-wrap {
+    width: 46px;
+    height: 46px;
+  }
+
+  .weather-temp {
+    font-size: 30px;
+  }
+
+  .weather-side {
+    width: 100%;
+    padding-left: 0;
+    padding-top: 12px;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .weather-actions {
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    flex-direction: row;
+  }
+
+  .weather-card {
+    padding-right: 68px;
+  }
+
+  .weather-retry {
+    margin-left: auto;
+  }
+
+  .mod-row {
+    padding: 0 8px 0 2px;
+    gap: 6px;
+  }
+
+  .mod-desc {
+    display: none;
+  }
+
+  .mod-arrow {
+    width: 24px;
+    height: 24px;
+  }
+
+  .avatar-editor {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .avatar-picks {
+    justify-content: center;
+  }
+
+  .avatar-editor-label {
+    text-align: center;
+  }
+
+  .profile-card {
+    padding: 16px;
+  }
+
+  .profile-edit {
+    padding: 6px 9px;
+  }
+
+  .danger-actions .btn {
+    flex: 1;
+    min-width: 140px;
   }
 }

@@ -22,6 +22,10 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* 移动端：去掉点击时的灰块，滚动带惯性 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
   /* 纸感：极淡的网格噪点，不抢内容 */
   background-image: radial-gradient(
     circle at 1px 1px,
@@ -29,6 +33,14 @@ body {
     transparent 0
   );
   background-size: 22px 22px;
+}
+
+/* 横向滚动的容器统一加惯性 */
+.account-row,
+.acc-picker,
+.bank-row,
+.avatar-picks {
+  -webkit-overflow-scrolling: touch;
 }
 
 h1,

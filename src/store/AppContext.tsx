@@ -4,13 +4,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
-import type { Account, Txn, User } from '../lib/types';
+import type { Account, AiConfig, HomeModule, Txn, User } from '../lib/types';
 import * as store from '../lib/storage';
 import { getCategory } from '../lib/categories';
 import { getAccountType, netOf } from '../lib/accounts';
+import { DEFAULT_MODULES } from '../lib/homeModules';
+import { DEFAULT_AI } from '../lib/ai';
 
 interface AppContextValue {
   ready: boolean;
@@ -32,6 +35,12 @@ interface AppContextValue {
   removeAccount: (id: string) => { ok: boolean; error?: string };
   /* 其他 */
   setBudget: (n: number) => void;
+  /** 改昵称、头像 */
+  updateProfile: (patch: Partial<Pick<User, 'name' | 'avatar'>>) => void;
+  setHomeModules: (list: HomeModule[]) => void;
+  setAi: (cfg: AiConfig) => void;
+  /** 删除本地全部数据：账号、流水、账户、配置 */
+  wipeAll: () => void;
   clearTxns: () => void;
   loadDemoData: () => void;
   composerOpen: boolean;
@@ -57,6 +66,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [txns, setTxns] = useState<Txn[]>([]);
   const [composerOpen, setComposerOpen] = useState(false);
+  /** 彻底删除时跳过下一次落盘，否则空状态又会被写回去 */
+  const skipSaveRef = useRef(false);
 
   // 首次挂载读本地快照
   useEffect(() => {
@@ -70,7 +81,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // 任何变更都落盘；ready 之前不写，避免用空状态覆盖已有数据
   useEffect(() => {
     if (!ready) return;
-    store.save({ version: 2, user, accounts, txns });
+    if (skipSaveRef.current) {
+      skipSaveRef.current = false;
+      return;
+    }
+    store.save({ version: 3, user, accounts, txns });
   }, [ready, user, accounts, txns]);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
@@ -86,6 +101,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       email: mail,
       budget: 6000,
       joinedAt: Date.now(),
+      avatar: 'initial',
+      homeModules: DEFAULT_MODULES.map((m) => ({ ...m })),
+      ai: { ...DEFAULT_AI },
     });
     setAccounts(seed.accounts);
     setTxns(seed.txns);
@@ -107,6 +125,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           email: mail,
           budget: 6000,
           joinedAt: Date.now(),
+          avatar: 'initial',
+          homeModules: DEFAULT_MODULES.map((m) => ({ ...m })),
+          ai: { ...DEFAULT_AI },
         };
       });
       // 首次登录没有账户时补一份示例，否则进首页是空的
@@ -186,6 +207,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser((prev) => (prev ? { ...prev, budget: Math.max(0, Math.round(n)) } : prev));
   }, []);
 
+  const updateProfile = useCallback((patch: Partial<Pick<User, 'name' | 'avatar'>>) => {
+    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
+  const setHomeModules = useCallback((list: HomeModule[]) => {
+    setUser((prev) => (prev ? { ...prev, homeModules: list } : prev));
+  }, []);
+
+  const setAi = useCallback((cfg: AiConfig) => {
+    setUser((prev) => (prev ? { ...prev, ai: cfg } : prev));
+  }, []);
+
+  const wipeAll = useCallback(() => {
+    skipSaveRef.current = true;
+    store.clearAll();
+    setUser(null);
+    setAccounts([]);
+    setTxns([]);
+    setComposerOpen(false);
+  }, []);
+
   const clearTxns = useCallback(() => setTxns([]), []);
 
   const loadDemoData = useCallback(() => {
@@ -228,6 +270,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAccountBalance,
       removeAccount,
       setBudget,
+      updateProfile,
+      setHomeModules,
+      setAi,
+      wipeAll,
       clearTxns,
       loadDemoData,
       composerOpen,
@@ -251,6 +297,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAccountBalance,
       removeAccount,
       setBudget,
+      updateProfile,
+      setHomeModules,
+      setAi,
+      wipeAll,
       clearTxns,
       loadDemoData,
       composerOpen,

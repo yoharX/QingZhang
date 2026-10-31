@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { Icon } from '../components/Icon';
+import { AiSettings } from '../components/AiSettings';
 import { TrendChart } from '../components/charts';
 import { analyze, type InsightTone } from '../lib/insights';
+import { aiReady, analyzeRemote, normalizeAi, type RemoteResult } from '../lib/ai';
+import type { AiConfig, AiMode } from '../lib/types';
 import { money, moneyRound } from '../lib/format';
 import { monthlySeries } from '../lib/stats';
 
@@ -23,7 +27,7 @@ function formatShare(v: number): string {
 function ScoreRing({ value, size = 128 }: { value: number; size?: number }) {
   const r = 46;
   const circ = 2 * Math.PI * r;
-  const sweep = 0.75; // 270°
+  const sweep = 0.75;
   const filled = (Math.min(100, Math.max(0, value)) / 100) * circ * sweep;
   return (
     <div className="score-ring" style={{ width: size, height: size }}>
@@ -34,7 +38,7 @@ function ScoreRing({ value, size = 128 }: { value: number; size?: number }) {
             cy="60"
             r={r}
             fill="none"
-            stroke="rgba(246,245,241,0.16)"
+            stroke="rgba(238,247,251,0.16)"
             strokeWidth="9"
             strokeDasharray={`${circ * sweep} ${circ}`}
             strokeLinecap="round"
@@ -60,37 +64,142 @@ function ScoreRing({ value, size = 128 }: { value: number; size?: number }) {
   );
 }
 
-export function InsightsPage() {
-  const { txns, user, openComposer } = useApp();
-  const [busy, setBusy] = useState(true);
-  const [tick, setTick] = useState(0);
+interface CardItem {
+  id: string;
+  tone: InsightTone;
+  tag: string;
+  title: string;
+  body: string;
+  metric?: { label: string; value: string };
+}
 
+export function InsightsPage() {
+  const { txns, user, openComposer, setAi } = useApp();
+  const navigate = useNavigate();
+  const [tick, setTick] = useState(0);
+  const [busy, setBusy] = useState(true);
+  const [remote, setRemote] = useState<RemoteResult | null>(null);
+  const [err, setErr] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
+  const reqId = useRef(0);
+
+  const ai = useMemo(() => normalizeAi(user?.ai), [user?.ai]);
   const budget = user?.budget ?? 0;
   const result = useMemo(() => analyze(txns, budget), [txns, budget]);
   const trend = useMemo(() => monthlySeries(txns, 6), [txns]);
+  const remoteMode = ai.mode === 'remote';
+  const configured = aiReady(ai);
 
-  // 进入页面与手动刷新时都跑一遍"分析"过程，让状态可感知
+  // 本地 / 远程切换或手动刷新时重新跑一次
   useEffect(() => {
+    const my = ++reqId.current;
+    setErr('');
+
+    if (remoteMode && configured) {
+      setBusy(true);
+      analyzeRemote(
+        {
+          month: `${new Date().getFullYear()}年${new Date().getMonth() + 1}月`,
+          expense: result.monthExpense,
+          income: result.monthIncome,
+          prevExpense: result.prevExpense,
+          budget,
+          recordedDays: result.recordedDays,
+          totalDays: result.totalDays,
+          categories: result.slices.map((s) => ({
+            label: s.label,
+            value: s.value,
+            share: s.share,
+            count: s.count,
+          })),
+          monthly: trend.map((m) => ({ label: m.label, expense: m.expense, income: m.income })),
+        },
+        ai
+      )
+        .then((r) => {
+          if (my !== reqId.current) return;
+          setRemote(r);
+          setBusy(false);
+        })
+        .catch((e: unknown) => {
+          if (my !== reqId.current) return;
+          setErr(e instanceof Error ? e.message : '调用失败');
+          setBusy(false);
+        });
+      return;
+    }
+
     setBusy(true);
-    const id = window.setTimeout(() => setBusy(false), 900);
-    return () => window.clearTimeout(id);
-  }, [tick]);
+    const t = window.setTimeout(() => setBusy(false), 900);
+    return () => window.clearTimeout(t);
+  }, [remoteMode, configured, tick, result, budget, trend, ai]);
 
   const rerun = () => setTick((v) => v + 1);
 
+  const switchMode = (mode: AiMode) => {
+    setAi({ ...ai, mode });
+    // 没填过密钥就直接把配置弹出来，省得再找入口
+    if (mode === 'remote' && !configured) setAiOpen(true);
+  };
+
+  const cards: CardItem[] = useMemo(() => {
+    if (remoteMode && remote) {
+      return remote.insights.map((ins, i) => ({
+        id: `r-${i}`,
+        tone: ins.tone,
+        tag: ins.tag,
+        title: ins.title,
+        body: ins.body,
+      }));
+    }
+    return result.insights.slice(0, 6).map((ins) => ({
+      id: ins.id,
+      tone: ins.tone,
+      tag: ins.tag,
+      title: ins.title,
+      body: ins.body,
+      metric: ins.metric,
+    }));
+  }, [remoteMode, remote, result.insights]);
+
   const maxSlice = result.slices[0]?.value ?? 1;
+  const showRemoteHint = remoteMode && !configured;
+  const headline = remoteMode && remote ? remote.headline : result.headline;
+  const narrative = remoteMode && remote ? remote.narrative : result.narrative;
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
           <h1 className="page-title">AI 分析</h1>
-          <p className="page-sub">基于本月流水，找出值得注意的变化</p>
+          <p className="page-sub">
+            {remoteMode ? '由大模型读你的账目后给出解读' : '基于本月流水，找出值得注意的变化'}
+          </p>
         </div>
-        <button className="btn btn-ghost" onClick={rerun} disabled={busy}>
-          <Icon name="refresh" size={16} className={busy ? 'spin' : undefined} />
-          {busy ? '分析中' : '重新分析'}
-        </button>
+        <div className="head-actions">
+          <div className="seg seg-mini" role="tablist" aria-label="分析方式">
+            <button
+              role="tab"
+              aria-selected={!remoteMode}
+              className={`seg-item${!remoteMode ? ' is-active' : ''}`}
+              onClick={() => switchMode('local')}
+            >
+              本地
+            </button>
+            <button
+              role="tab"
+              aria-selected={remoteMode}
+              className={`seg-item${remoteMode ? ' is-active' : ''}`}
+              onClick={() => switchMode('remote')}
+            >
+              大模型
+            </button>
+          </div>
+          <button className="btn btn-ghost btn-icon-only" onClick={rerun} disabled={busy}>
+            <Icon name="refresh" size={16} className={busy ? 'spin' : undefined} />
+            <span className="btn-label">{busy ? '分析中' : '重新分析'}</span>
+          </button>
+        </div>
       </header>
 
       {/* ---------- 解读主卡 ---------- */}
@@ -99,21 +208,53 @@ export function InsightsPage() {
           <div className="insight-hero-head">
             <span className="ai-badge">
               <Icon name="sparkle" size={14} />
-              本期解读
+              {remoteMode ? remote?.model ?? ai.model : '本期解读'}
             </span>
             {busy && <span className="ai-scan" />}
           </div>
 
-          {busy ? (
+          {showRemoteHint ? (
+            <>
+              <h2 className="insight-headline">还没有配置大模型</h2>
+              <p className="insight-narrative">
+                在「我的 → AI 分析」里填接口地址、密钥和模型名，就能让模型读你的账目。密钥只存在这台设备上。
+              </p>
+              <button
+                className="btn btn-hero"
+                style={{ marginTop: 18 }}
+                onClick={() => navigate('/me', { state: { focus: 'ai' } })}
+              >
+                去配置
+                <Icon name="chevronRight" size={14} />
+              </button>
+            </>
+          ) : err ? (
+            <>
+              <h2 className="insight-headline">这次没分析成功</h2>
+              <p className="insight-narrative">{err}</p>
+              <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+                <button className="btn btn-hero" onClick={rerun}>
+                  重试
+                </button>
+                <button
+                  className="btn btn-hero-ghost"
+                  onClick={() => navigate('/me', { state: { focus: 'ai' } })}
+                >
+                  检查配置
+                </button>
+              </div>
+            </>
+          ) : busy ? (
             <>
               <div className="skeleton sk-line sk-lg" />
               <div className="skeleton sk-line" style={{ width: '86%' }} />
               <div className="skeleton sk-line" style={{ width: '62%' }} />
+              {remoteMode && <p className="ai-wait">正在请求 {ai.model}，通常 5–15 秒</p>}
             </>
           ) : (
             <>
-              <h2 className="insight-headline">{result.headline}</h2>
-              <p className="insight-narrative">{result.narrative}</p>
+              <h2 className="insight-headline">{headline}</h2>
+              <p className="insight-narrative">{narrative}</p>
             </>
           )}
 
@@ -152,7 +293,9 @@ export function InsightsPage() {
 
       <p className="ai-source">
         <Icon name="info" size={13} />
-        这一版由本地规则引擎计算，数据不出设备；接入模型后可以给出更具体的建议。
+        {remoteMode
+          ? `解读由 ${remote?.model || ai.model} 生成，健康分与图表仍是本地计算；数据只发给你配置的服务商。`
+          : '本地规则引擎计算，数据不出设备；切到「大模型」可以让模型来读。'}
       </p>
 
       {/* ---------- 洞察卡 ---------- */}
@@ -167,10 +310,9 @@ export function InsightsPage() {
             </div>
           ))}
         </section>
-      ) : (
+      ) : cards.length > 0 ? (
         <section className="insight-grid">
-          {/* 两列网格，取偶数条避免最后一行单卡留白 */}
-          {result.insights.slice(0, 6).map((ins, i) => {
+          {cards.slice(0, 6).map((ins, i) => {
             const meta = TONE_META[ins.tone];
             return (
               <article
@@ -196,7 +338,7 @@ export function InsightsPage() {
             );
           })}
         </section>
-      )}
+      ) : null}
 
       {/* ---------- 趋势 ---------- */}
       <section className="card rise" style={{ animationDelay: '120ms' }}>
@@ -244,10 +386,7 @@ export function InsightsPage() {
                 <span className="rank-track">
                   <span
                     className="rank-fill"
-                    style={{
-                      width: `${(s.value / maxSlice) * 100}%`,
-                      background: s.color,
-                    }}
+                    style={{ width: `${(s.value / maxSlice) * 100}%`, background: s.color }}
                   />
                 </span>
                 <span className="rank-val num">{money(s.value)}</span>
@@ -257,6 +396,13 @@ export function InsightsPage() {
           </ul>
         )}
       </section>
+
+      <AiSettings
+        open={aiOpen}
+        config={ai}
+        onSave={(cfg: AiConfig) => setAi(cfg)}
+        onClose={() => setAiOpen(false)}
+      />
     </div>
   );
 }

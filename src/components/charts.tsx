@@ -138,7 +138,7 @@ export function TrendChart({ data }: { data: MonthPoint[] }) {
   // 顶到边会让柱子看起来"溢出"，留 12% 头部空间
   const max = Math.max(...data.flatMap((d) => [d.expense, d.income]), 1) * 1.12;
   const groupW = (w - padX * 2) / data.length;
-  const barW = Math.min(22, groupW * 0.28);
+  const barW = Math.min(27, groupW * 0.3);
   const scale = (v: number) => ((h - padTop - padBottom) * v) / max;
 
   return (

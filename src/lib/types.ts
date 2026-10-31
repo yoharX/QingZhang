@@ -27,12 +27,40 @@ export interface Txn {
   createdAt: number;
 }
 
+/** 首页板块，顺序即数组顺序 */
+export interface HomeModule {
+  key: HomeModuleKey;
+  visible: boolean;
+}
+
+export type HomeModuleKey =
+  | 'weather'
+  | 'accounts'
+  | 'budget'
+  | 'category'
+  | 'week'
+  | 'recent';
+
+export type AiMode = 'local' | 'remote';
+
+export interface AiConfig {
+  mode: AiMode;
+  /** OpenAI 兼容接口，填到 /v1 这一层 */
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+}
+
 export interface User {
   name: string;
   email: string;
   /** 月度预算，0 表示不设 */
   budget: number;
   joinedAt: number;
+  /** 'initial' | 'g1'..'g6' | dataURL */
+  avatar?: string;
+  homeModules?: HomeModule[];
+  ai?: AiConfig;
 }
 
 export interface PersistedState {
@@ -41,5 +69,3 @@ export interface PersistedState {
   accounts: Account[];
   txns: Txn[];
 }
-
-export type Range = 'month' | 'prevMonth' | 'last3' | 'all';
