@@ -1,0 +1,344 @@
+/* ============================================================
+   保存动效：对勾卡片 → 退场 → 小票回执
+   ============================================================ */
+
+.flow-root {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.flow-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 35, 43, 0.36);
+  backdrop-filter: blur(4px);
+  animation: flowScrim 340ms var(--ease) both;
+}
+
+@keyframes flowScrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- 对勾卡片 ---------- */
+.flow-check {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.flow-check-card {
+  width: 172px;
+  height: 172px;
+  border-radius: 46px;
+  background: var(--surface);
+  box-shadow: var(--sh-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  animation: checkCardIn 520ms var(--ease-out) both;
+  will-change: transform, opacity;
+}
+
+@keyframes checkCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.86);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.flow-check.is-out .flow-check-card {
+  animation: checkCardOut 340ms var(--ease) forwards;
+}
+
+@keyframes checkCardOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.92);
+  }
+}
+
+.check-svg {
+  width: 72px;
+  height: 72px;
+  overflow: visible;
+}
+
+.check-ring {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.32;
+  stroke-dasharray: 198;
+  stroke-dashoffset: 198;
+  animation: strokeDraw 700ms var(--ease-out) 120ms forwards;
+}
+
+.check-mark {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 4.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 45;
+  stroke-dashoffset: 45;
+  animation: strokeDraw 480ms var(--ease-out) 620ms forwards;
+}
+
+@keyframes strokeDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.flow-check-text {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--ink-3);
+  padding-left: 0.22em;
+  animation: fadeIn 320ms var(--ease) 760ms both;
+}
+
+/* ---------- 回执 ---------- */
+.flow-receipt-wrap {
+  position: relative;
+  width: min(342px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: receiptIn 460ms var(--ease-out) both;
+}
+
+@keyframes receiptIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.receipt {
+  width: 100%;
+  /* 背景交给 body 和齿孔条自己画，父层留空，齿孔才能露出后面的遮罩 */
+  background: transparent;
+  border-radius: 18px 18px 0 0;
+  filter: drop-shadow(0 16px 36px rgba(16, 35, 43, 0.28));
+}
+
+.receipt-body {
+  background: var(--surface);
+  border-radius: 18px 18px 0 0;
+  padding: 18px 22px 8px;
+}
+
+.receipt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+}
+
+.receipt-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 620;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+.receipt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.receipt-time {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.receipt-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 20px;
+}
+
+.receipt-flag {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 620;
+  letter-spacing: 0.08em;
+}
+
+.receipt-flag.is-out {
+  background: var(--expense-soft);
+  color: var(--expense-strong);
+}
+
+.receipt-flag.is-in {
+  background: var(--income-soft);
+  color: var(--brand-deep);
+}
+
+.receipt-amount {
+  font-size: 36px;
+  font-weight: 640;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.receipt-caption {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.14em;
+}
+
+.receipt-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 0 16px;
+}
+
+.receipt-meta li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 13px;
+}
+
+.rm-key {
+  color: var(--ink-3);
+  flex: none;
+}
+
+.rm-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 520;
+  text-align: right;
+  min-width: 0;
+}
+
+.rm-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.receipt-divider {
+  height: 1px;
+  background-image: linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 12px);
+  background-size: 12px 1px;
+  margin-bottom: 14px;
+}
+
+.receipt-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.rb-label {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.rb-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.rb-flow .dim {
+  text-decoration: line-through;
+  text-decoration-color: var(--line-strong);
+}
+
+.rb-flow strong {
+  font-weight: 640;
+  color: var(--brand-deep);
+}
+
+/* 小票底部撕口：一排半圆缺口，用浅灰实心模拟打孔（挖洞会透出遮罩，太淡） */
+.receipt-perf {
+  height: 12px;
+  background-image: radial-gradient(
+    circle at 50% 0,
+    var(--line-strong) 0 5.2px,
+    var(--surface) 5.6px
+  );
+  background-size: 18px 12px;
+  background-repeat: repeat-x;
+  background-position: 0 0;
+}
+
+.receipt-done {
+  margin-top: 22px;
+  height: 44px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px -10px rgba(6, 59, 82, 0.55);
+}
+
+.flow-hint {
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: rgba(238, 247, 251, 0.68);
+  letter-spacing: 0.06em;
+  animation: fadeIn 400ms var(--ease) 260ms both;
+}
+
+@media (max-width: 860px) {
+  .flow-check-card {
+    width: 152px;
+    height: 152px;
+    border-radius: 40px;
+  }
+
+  .check-svg {
+    width: 64px;
+    height: 64px;
+  }
+
+  .receipt-amount {
+    font-size: 32px;
+  }
+}

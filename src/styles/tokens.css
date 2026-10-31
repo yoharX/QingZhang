@@ -1,0 +1,80 @@
+/* ============================================================
+   轻帐 · 设计令牌
+   主色板：#0092C7 主蓝 / #9FE0F6 浅天蓝 / #F3E59A 淡黄
+          #F3B59B 珊瑚橙（支出）/ #F29C9C 柔红（警示）
+   派生色只做明度与饱和度微调，不引入新色相
+   ============================================================ */
+:root {
+  /* 中性：冷调纸白，压住蓝的冷感 */
+  --paper: #f6f9fa;
+  --paper-2: #ecf2f5;
+  --surface: #ffffff;
+  --surface-sunken: #f7fbfc;
+  --line: #e2ebef;
+  --line-strong: #cddbe2;
+
+  --ink: #10232b;
+  --ink-2: #4d6672;
+  --ink-3: #8ba0ab;
+  --ink-inverse: #eef7fb;
+
+  /* 主色 */
+  --brand: #0092c7;
+  --brand-deep: #0077a3;
+  --brand-darker: #063b52;
+  --brand-soft: #e2f4fb;
+  --brand-mist: #9fe0f6;
+  --brand-ring: rgba(0, 146, 199, 0.2);
+
+  /* 语义 */
+  --expense: #f3b59b;
+  --expense-strong: #d9705a;
+  --expense-soft: #fdefe9;
+  --income: #0077a3;
+  --income-soft: #e2f4fb;
+  --warn: #a8821f;
+  --warn-soft: #fdf8dd;
+  --accent: #f3e59a;
+  --danger: #d96a6a;
+  --danger-soft: #fdf0f0;
+
+  /* 图表色板：从 5 个主色派生，按图表可辨识度微调明度 */
+  --c1: #0092c7;
+  --c2: #4bb0d4;
+  --c3: #86cbdf;
+  --c4: #f3b59b;
+  --c5: #ef9a7f;
+  --c6: #e8d27a;
+  --c7: #7e9dab;
+  --c8: #c9bcae;
+
+  /* 尺寸 */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* 阴影：极轻，靠描边分层 */
+  --sh-1: 0 1px 2px rgba(16, 35, 43, 0.04);
+  --sh-2: 0 2px 8px rgba(16, 35, 43, 0.05), 0 12px 32px -12px rgba(16, 35, 43, 0.1);
+  --sh-3: 0 24px 64px -24px rgba(16, 35, 43, 0.24);
+
+  /* 动效 */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 160ms;
+  --t-base: 240ms;
+  --t-slow: 420ms;
+
+  /* 字体 */
+  --font-sans: "PingFang SC", "HarmonyOS Sans SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Source Han Sans SC", system-ui, -apple-system, sans-serif;
+  --font-num: "SF Pro Display", "Segoe UI Variable Display", "Outfit", var(--font-sans);
+  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+
+  /* 布局 */
+  --sidebar-w: 236px;
+  --content-max: 1180px;
+}

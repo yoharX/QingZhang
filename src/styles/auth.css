@@ -1,0 +1,261 @@
+/* ============================================================
+   登录 / 注册
+   ============================================================ */
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------- 左：品牌区 ---------- */
+.auth-aside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 48px 40px;
+  background: #063b52;
+  color: var(--paper);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.auth-aside::before {
+  content: '';
+  position: absolute;
+  right: -140px;
+  top: -160px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 146, 199, 0.42) 0%, transparent 66%);
+  z-index: -1;
+}
+
+.auth-aside::after {
+  content: '';
+  position: absolute;
+  left: -120px;
+  bottom: -180px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(243, 229, 154, 0.18) 0%, transparent 70%);
+  z-index: -1;
+}
+
+.auth-aside-top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.auth-aside-name {
+  font-size: 17px;
+  font-weight: 620;
+  letter-spacing: 0.02em;
+}
+
+.auth-aside-body {
+  position: relative;
+  z-index: 1;
+  max-width: 460px;
+}
+
+.auth-kicker {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: rgba(238, 247, 251, 0.42);
+  margin-bottom: 20px;
+}
+
+.auth-slogan {
+  font-size: clamp(40px, 4.4vw, 62px);
+  font-weight: 640;
+  line-height: 1.18;
+  letter-spacing: -0.045em;
+  color: var(--paper);
+  text-wrap: balance;
+}
+
+.auth-desc {
+  margin-top: 22px;
+  font-size: 14.5px;
+  line-height: 1.85;
+  color: rgba(238, 247, 251, 0.6);
+  text-wrap: pretty;
+}
+
+.auth-aside-foot {
+  display: flex;
+  gap: 44px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.auth-stat-num {
+  font-size: 22px;
+  font-weight: 620;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+
+.auth-stat-label {
+  font-size: 11.5px;
+  color: rgba(238, 247, 251, 0.45);
+}
+
+/* 账本刻度装饰 */
+.auth-ruler {
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.auth-ruler span {
+  display: block;
+  height: 1px;
+  width: 46px;
+  background: var(--paper);
+}
+
+.auth-ruler span:nth-child(4n + 1) {
+  width: 74px;
+}
+
+/* ---------- 右：表单区 ---------- */
+.auth-form-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  background: var(--paper);
+}
+
+.auth-mobile-brand {
+  display: none;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 384px;
+}
+
+.seg-auth {
+  margin-bottom: 26px;
+}
+
+.auth-title {
+  font-size: 26px;
+  font-weight: 660;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.auth-sub {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.auth-submit {
+  height: 46px;
+  margin-top: 4px;
+  font-size: 14.5px;
+}
+
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--danger);
+  background: #fdf3f1;
+  border: 1px solid #f2d8d3;
+  border-radius: var(--r-xs);
+  padding: 9px 11px;
+  animation: riseIn 200ms var(--ease);
+}
+
+.auth-demo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 34px;
+  font-size: 13px;
+  color: var(--ink-2);
+  border-radius: var(--r-xs);
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+
+.auth-demo:hover:not(:disabled) {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.auth-legal {
+  margin-top: 24px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink-3);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 940px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-aside {
+    display: none;
+  }
+
+  .auth-form-wrap {
+    justify-content: center;
+    padding: 34px 20px 48px;
+    min-height: 100vh;
+  }
+
+  .auth-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 30px;
+    font-size: 15px;
+    font-weight: 620;
+    align-self: flex-start;
+    width: 100%;
+    max-width: 384px;
+  }
+
+  .auth-card {
+    max-width: 384px;
+  }
+
+  .auth-title {
+    font-size: 23px;
+  }
+}
